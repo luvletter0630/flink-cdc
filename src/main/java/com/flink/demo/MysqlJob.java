@@ -17,6 +17,11 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  **/
 public class MysqlJob {
 
+    /**
+     * Main method for the MysqlJob.
+     *
+     * @param args command line arguments
+     */
     public static void main(String[] args) throws Exception {
         MySqlSourceBuilder<String> builder = MySqlSource.builder();
         ParameterTool parameterTool = ParameterTool.fromArgs(args);
@@ -58,9 +63,9 @@ public class MysqlJob {
         env.enableCheckpointing(3000);
         CheckpointConfig checkpointConfig = env.getCheckpointConfig();
         checkpointConfig.setExternalizedCheckpointCleanup(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
-        //配置mysql数据源
+        // configure mysql source
         env.fromSource(source, WatermarkStrategy.noWatermarks(), "MYSQL Source")
-                //配置输出，可以发送到kafka
+                // configure output, can send to kafka
                 .addSink(new CustomSink());
 
         env.execute();
