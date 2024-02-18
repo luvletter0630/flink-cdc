@@ -6,11 +6,14 @@
 
     <groupId>org.example</groupId>
     <artifactId>flink-cdc</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0-GSMYSQL-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <flink.version>1.16.3</flink.version>
+        <flinkcdc.version>2.4.1</flinkcdc.version>
+        <kafka.version>2.3.1</kafka.version>
     </properties>
    <dependencies>
        <dependency>
@@ -18,55 +21,45 @@
            <artifactId>fastjson2</artifactId>
            <version>2.0.42</version>
        </dependency>
-       <!--        flink connector 基础包-->
+
        <dependency>
            <groupId>org.apache.flink</groupId>
-           <artifactId>flink-connector-base</artifactId>
-           <version>1.14.4</version>
+           <artifactId>flink-java</artifactId>
+           <version>${flink.version}</version>
+       </dependency>
+       <dependency>
+           <groupId>org.apache.flink</groupId>
+           <artifactId>flink-streaming-java</artifactId>
+           <version>${flink.version}</version>
+       </dependency>
+       <dependency>
+           <groupId>org.apache.flink</groupId>
+           <artifactId>flink-clients</artifactId>
+           <version>${flink.version}</version>
        </dependency>
        <!--        CDC mysql 源-->
        <dependency>
            <groupId>com.ververica</groupId>
            <artifactId>flink-sql-connector-mysql-cdc</artifactId>
-           <version>2.3.0</version>
+           <version>${flinkcdc.version}</version>
        </dependency>
-       <!--        Flink Steam流处理-->
-       <dependency>
-           <groupId>org.apache.flink</groupId>
-           <artifactId>flink-streaming-java_2.11</artifactId>
-           <version>1.14.4</version>
-       </dependency>
-       <!--        flink java客户端-->
-       <dependency>
-           <groupId>org.apache.flink</groupId>
-           <artifactId>flink-clients_2.12</artifactId>
-           <version>1.14.4</version>
-       </dependency>
-       <!--        开启webui支持，默认是8081，默认没有开启-->
-       <dependency>
-           <groupId>org.apache.flink</groupId>
-           <artifactId>flink-runtime-web_2.12</artifactId>
-           <version>1.14.4</version>
-       </dependency>
-       <dependency>
-           <groupId>org.apache.flink</groupId>
-           <artifactId>flink-table-runtime_2.11</artifactId>
-           <version>1.14.4</version>
-       </dependency>
+
        <dependency>
            <groupId>ch.qos.logback</groupId>
            <artifactId>logback-classic</artifactId>
            <version>1.2.11</version>
        </dependency>
+
        <dependency>
            <groupId>org.slf4j</groupId>
            <artifactId>slf4j-api</artifactId>
            <version>2.0.6</version>
        </dependency>
+
        <dependency>
            <groupId>org.apache.kafka</groupId>
            <artifactId>kafka-clients</artifactId>
-           <version>2.4.1</version>
+           <version>${kafka.version}</version>
        </dependency>
    </dependencies>
     <build>
