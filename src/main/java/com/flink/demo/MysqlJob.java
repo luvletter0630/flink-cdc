@@ -31,32 +31,20 @@ public class MysqlJob {
         String tableList = parameterTool.get("tableList");
         String username = parameterTool.get("username");
         String password = parameterTool.get("password");
-        boolean initialized = parameterTool.getBoolean("initialized");
-        MySqlSource<String> source = null;
+        int opType = parameterTool.getInt("opType");
 
-        if (initialized) {
-            source = builder.hostname(hostname)
-                    .port(port)
-                    .databaseList(databaseList)
-                    .tableList(tableList)
-                    .username(username)
-                    .password(password)
-                    .deserializer(new JsonDebeziumDeserializationSchema())
-                    .includeSchemaChanges(true)
-                    .startupOptions(StartupOptions.initial())
-                    .build();
-        } else {
-            source = builder.hostname(hostname)
-                    .port(port)
-                    .databaseList(databaseList)
-                    .tableList(tableList)
-                    .username(username)
-                    .password(password)
-                    .deserializer(new JsonDebeziumDeserializationSchema())
-                    .includeSchemaChanges(true)
-                    .startupOptions(StartupOptions.latest())
-                    .build();
-        }
+
+
+        MySqlSource<String> source = builder.hostname(hostname)
+                .port(port)
+                .databaseList(databaseList)
+                .tableList(tableList)
+                .username(username)
+                .password(password)
+                .deserializer(new JsonDebeziumDeserializationSchema())
+                .includeSchemaChanges(true)
+                .startupOptions(opType == 2 ? StartupOptions.initial() : StartupOptions.latest())
+                .build();
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.getConfig().setGlobalJobParameters(parameterTool);
@@ -66,7 +54,7 @@ public class MysqlJob {
         // configure mysql source
         env.fromSource(source, WatermarkStrategy.noWatermarks(), "MYSQL Source")
                 // configure output, can send to kafka
-                .addSink(new CustomSink());
+                .addSink(new CustomSink()).setParallelism(1);
 
         env.execute();
     }

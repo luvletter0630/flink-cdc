@@ -17,9 +17,9 @@ public class KafkaProducer {
      * @param key     the key for the message
      * @param message the message to be sent
      */
-    public static void sendMessage(String topic, String key, String message) {
+    public static void sendMessage(String clusterIp,String topic, String key, String message) {
         Properties properties = new Properties();
-        properties.put("bootstrap.servers", "172.30.141.125:9092,172.30.141.126:9092,172.30.141.133:9092");
+        properties.put("bootstrap.servers", clusterIp);
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
