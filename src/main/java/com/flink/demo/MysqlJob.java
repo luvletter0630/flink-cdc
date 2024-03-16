@@ -4,6 +4,7 @@ import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.source.MySqlSourceBuilder;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 import com.ververica.cdc.debezium.JsonDebeziumDeserializationSchema;
+import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
@@ -33,8 +34,6 @@ public class MysqlJob {
         String password = parameterTool.get("password");
         int opType = parameterTool.getInt("opType");
 
-
-
         MySqlSource<String> source = builder.hostname(hostname)
                 .port(port)
                 .databaseList(databaseList)
@@ -48,7 +47,6 @@ public class MysqlJob {
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.getConfig().setGlobalJobParameters(parameterTool);
-        env.enableCheckpointing(3000);
         CheckpointConfig checkpointConfig = env.getCheckpointConfig();
         checkpointConfig.setExternalizedCheckpointCleanup(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
         // configure mysql source
@@ -56,6 +54,7 @@ public class MysqlJob {
                 // configure output, can send to kafka
                 .addSink(new CustomSink()).setParallelism(1);
 
-        env.execute();
+        JobExecutionResult jobExecutionResult = env.execute();
+        jobExecutionResult.getJobID();
     }
 }
