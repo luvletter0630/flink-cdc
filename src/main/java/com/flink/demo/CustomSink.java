@@ -1,12 +1,14 @@
 package com.flink.demo;
 
 import com.alibaba.fastjson2.JSONObject;
+import es.ESUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.ExecutionException;
 
 /**
  * A custom sink function for Flink that writes data to Kafka.
@@ -18,46 +20,53 @@ public class CustomSink extends RichSinkFunction<String> {
     public static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
     @Override
-    public void invoke(String value, Context context) throws Exception {
+    public void invoke(String value, Context context) {
+        ESUtil esUtil = new ESUtil();
         // parse the input JSON string
         JSONObject mysqlBinLog = JSONObject.parseObject(value);
-
         // get the runtime parameters
         ParameterTool parameters = (ParameterTool) getRuntimeContext().getExecutionConfig().getGlobalJobParameters();
         String topic = parameters.get("topic");
         String clusterIp = parameters.get("clusterIp");
         // get the operation type
         String op = mysqlBinLog.getString("op");
+        String jobId = getRuntimeContext().getJobId().toString();
         // 指定日期时间格式
-
         if ("u".equals(op)) {
             // for update operations, extract the before and after data
             JSONObject djson = setJsonObj("before", mysqlBinLog, "D");
-            log.info("update data before： " + djson.toJSONString());
+            sendToKafka(esUtil, topic, clusterIp, jobId, djson);
             JSONObject ujson = setJsonObj("after", mysqlBinLog, "U");
             // write the updated data to Kafka
-            KafkaProducer.sendMessage(clusterIp, topic, "mysqlupdate", ujson.toJSONString());
-            log.info("update data after: " + ujson.toJSONString());
+            sendToKafka(esUtil, topic, clusterIp, jobId, ujson);
         } else if ("d".equals(op)) {
             // for delete operations, extract the before data
             JSONObject deleteData = setJsonObj("before", mysqlBinLog, "D");
-            log.info("delete data: " + deleteData.toJSONString());
+            sendToKafka(esUtil, topic, clusterIp, jobId, deleteData);
             // write the deleted data to Kafka
-            KafkaProducer.sendMessage(clusterIp, topic, "mysqldelete", deleteData.toJSONString());
         } else if ("c".equals(op)) {
             // for insert operations, extract the after data
             JSONObject insertData = setJsonObj("after", mysqlBinLog, "I");
-            log.info("insert data: " + insertData.toJSONString());
-            // write the inserted data to Kafka
-            KafkaProducer.sendMessage(clusterIp, topic, "mysqlinsert", insertData.toJSONString());
+            sendToKafka(esUtil, topic, clusterIp, jobId, insertData);
         } else if ("r".equals(op)) {
             // for init data operations, extract the after data
             JSONObject initData = setJsonObj("after", mysqlBinLog, "I");
-            log.info("init data: " + initData.toJSONString());
-            // write the init data to Kafka
-            KafkaProducer.sendMessage(clusterIp, topic, "mysqlinitdata", initData.toJSONString());
+            sendToKafka(esUtil, topic, clusterIp, jobId, initData);
         }
 
+    }
+
+    private void sendToKafka(ESUtil esUtil, String topic, String clusterIp, String jobId, JSONObject jsonobj) {
+        try {
+            KafkaProducer.sendMessage(clusterIp, topic, null, jsonobj.toJSONString());
+            JSONObject logdata = new JSONObject();
+            logdata.put("jobId", jobId);
+            logdata.put("time", (DateTimeFormatter.ofPattern("yyyyMMddHHmmss")).format(LocalDateTime.now()));
+            logdata.put("msg", jsonobj.toJSONString());
+            esUtil.insertData(logdata, "flink-job");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static JSONObject setJsonObj(String status, JSONObject mysqlObject, String signature) {
@@ -66,4 +75,5 @@ public class CustomSink extends RichSinkFunction<String> {
         json.put("_DATA_CHANGE_TIME_CDC", LocalDateTime.now().format(dtf));
         return json;
     }
+
 }

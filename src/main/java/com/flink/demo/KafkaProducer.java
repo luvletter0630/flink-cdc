@@ -7,6 +7,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 /**
  * This class provides methods for producing messages to Kafka topics.
@@ -22,7 +23,7 @@ public class KafkaProducer {
      * @param message the message to be sent
      */
 
-    public static void sendMessage(String clusterIp, String topic, String key, String message) {
+    public static void sendMessage(String clusterIp, String topic, String key, String message) throws ExecutionException, InterruptedException {
         Properties props = new Properties();
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, clusterIp);
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
@@ -34,18 +35,17 @@ public class KafkaProducer {
         Producer<String, String> producer = new org.apache.kafka.clients.producer.KafkaProducer<>(props);
 
         // Send the message
-        try {
-            RecordMetadata metadata = producer.send(new ProducerRecord<>(topic, key, message)).get();
-            log.info("消息已成功发送至主题：{} , 分区： {}", metadata.topic(), metadata.partition());
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            // Close the producer
-            producer.close();
-        }
+        RecordMetadata metadata = producer.send(new ProducerRecord<>(topic, key, message)).get();
+        log.info("消息已成功发送至主题：{} , 分区： {}", metadata.topic(), metadata.partition());
     }
 
     public static void main(String[] args) {
-        KafkaProducer.sendMessage("172.30.145.213:9092", "Test-Topic", "1", "1213");
+        try {
+            KafkaProducer.sendMessage("172.30.145.213:9092", "Test-Topic", "1", "1213");
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
