@@ -1,0 +1,26 @@
+{
+  "settings": {
+    "number_of_shards": 3,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "properties": {
+      "jobId":{
+        "type": "text"
+      },
+      "time":{
+        "type": "date",
+        "format": "yyyyMMddHHmmss"
+      },
+      "msg":{
+        "type": "text"
+      },
+      "offset":{
+        "type": "text"
+      },
+      "partition": {
+        "type": "short"
+      }
+    }
+  }
+}

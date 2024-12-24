@@ -1,12 +1,9 @@
-package es;
+package com.flink.demo.es;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
-import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.PooledObjectFactory;
-import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -20,16 +17,28 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * @author wei
- * @version 1.0
- * @date 2022/5/13 9:43
+ * @author liwj
+ * @date 2024/3/26 12:13
+ * @description:
  */
-public class EsClientPoolFactory implements PooledObjectFactory<ElasticsearchClient> {
+public class EsSingleton {
+    private static ElasticsearchClient esClient;
 
+    private EsSingleton() {
+    }
 
-    @Override
-    public PooledObject<ElasticsearchClient> makeObject() throws Exception {
+    public static ElasticsearchClient getEsClient() {
+        if (esClient == null) {
+            synchronized (EsSingleton.class) {
+                if (esClient == null) {
+                    esClient = getClient();
+                }
+            }
+        }
+        return esClient;
+    }
 
+    private static ElasticsearchClient getClient() {
         String esServerHosts = "172.30.141.122:9200,172.30.141.123:9200,172.30.141.124:9200";
 
         List<HttpHost> httpHosts = new ArrayList<>();
@@ -52,28 +61,6 @@ public class EsClientPoolFactory implements PooledObjectFactory<ElasticsearchCli
         );
 
         ElasticsearchClient client = new ElasticsearchClient(transport);
-        return new DefaultPooledObject<>(client);
-    }
-
-    @Override
-    public void destroyObject(PooledObject<ElasticsearchClient> p) throws Exception {
-        ElasticsearchClient elasticsearchClient = p.getObject();
-        //log.info("对象被销毁了" + elasticsearchClient);
-    }
-
-    @Override
-    public boolean validateObject(PooledObject<ElasticsearchClient> p) {
-        return true;
-    }
-
-    @Override
-    public void activateObject(PooledObject<ElasticsearchClient> p) throws Exception {
-        //log.info("对象被激活了" + p.getObject());
-    }
-
-    @Override
-    public void passivateObject(PooledObject<ElasticsearchClient> p) throws Exception {
-        //log.info("对象被钝化了" + p.getObject());
+        return client;
     }
 }
-

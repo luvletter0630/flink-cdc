@@ -20,40 +20,41 @@
            <groupId>co.elastic.clients</groupId>
            <artifactId>elasticsearch-java</artifactId>
            <version>8.1.2</version>
-       </dependency>
-
-       <dependency>
-           <groupId>org.apache.commons</groupId>
-           <artifactId>commons-pool2</artifactId>
-           <version>2.7.0</version>
+           <scope>provided</scope>
        </dependency>
 
        <dependency>
            <groupId>org.apache.logging.log4j</groupId>
            <artifactId>log4j-slf4j-impl</artifactId>
            <version>2.17.1</version>
+           <scope>provided</scope>
        </dependency>
 
        <dependency>
            <groupId>com.alibaba.fastjson2</groupId>
            <artifactId>fastjson2</artifactId>
            <version>2.0.42</version>
+           <scope>provided</scope>
        </dependency>
 
        <dependency>
            <groupId>org.apache.flink</groupId>
            <artifactId>flink-java</artifactId>
            <version>${flink.version}</version>
+           <scope>provided</scope>
        </dependency>
+
        <dependency>
            <groupId>org.apache.flink</groupId>
            <artifactId>flink-streaming-java</artifactId>
            <version>${flink.version}</version>
+           <scope>provided</scope>
        </dependency>
        <dependency>
            <groupId>org.apache.flink</groupId>
            <artifactId>flink-clients</artifactId>
            <version>${flink.version}</version>
+           <scope>provided</scope>
        </dependency>
        <!--        CDC mysql 源-->
        <dependency>
@@ -66,18 +67,21 @@
            <groupId>org.projectlombok</groupId>
            <artifactId>lombok</artifactId>
            <version>1.18.28</version>
+           <scope>provided</scope>
        </dependency>
 
        <dependency>
            <groupId>org.apache.kafka</groupId>
            <artifactId>kafka-clients</artifactId>
            <version>${kafka.version}</version>
+           <scope>provided</scope>
        </dependency>
 
        <dependency>
            <groupId>com.fasterxml.jackson.core</groupId>
            <artifactId>jackson-databind</artifactId>
            <version>2.12.3</version>
+           <scope>provided</scope>
        </dependency>
 
        <!-- Needed only if you use the spring-boot Maven plugin -->
@@ -85,24 +89,40 @@
            <groupId>jakarta.json</groupId>
            <artifactId>jakarta.json-api</artifactId>
            <version>2.0.1</version>
+           <scope>provided</scope>
        </dependency>
        <!--localTest -->
        <dependency>
            <groupId>org.apache.flink</groupId>
            <artifactId>flink-table-api-scala-bridge_2.12</artifactId>
            <version>${flink.version}</version>
+           <scope>provided</scope>
+       </dependency>
+
+       <dependency>
+           <groupId>redis.clients</groupId>
+           <artifactId>jedis</artifactId>
+           <version>5.0.0</version>
        </dependency>
 
        <dependency>
            <groupId>org.apache.flink</groupId>
            <artifactId>flink-table-planner_2.12</artifactId>
            <version>${flink.version}</version>
+           <scope>provided</scope>
        </dependency>
 
        <dependency>
            <groupId>org.apache.flink</groupId>
            <artifactId>flink-connector-base</artifactId>
            <version>${flink.version}</version>
+           <scope>provided</scope>
+       </dependency>
+
+       <dependency>
+           <groupId>org.bouncycastle</groupId>
+           <artifactId>bcprov-jdk15on</artifactId>
+           <version>1.68</version>
        </dependency>
    </dependencies>
     <build>
@@ -140,31 +160,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-assembly-plugin</artifactId>-->
-<!--                <version>3.4.2</version>-->
-<!--                <configuration>-->
-<!--                    <archive>-->
-<!--                        <manifest>-->
-<!--                            <mainClass>com.flink.demo.MysqlJob</mainClass>-->
-<!--                        </manifest>-->
-<!--                    </archive>-->
-<!--                    <descriptorRefs>-->
-<!--                        <descriptorRef>jar-with-dependencies</descriptorRef>-->
-<!--                    </descriptorRefs>-->
-<!--                </configuration>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>make-assembly</id>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>single</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
         </plugins>
     </build>
 </project>

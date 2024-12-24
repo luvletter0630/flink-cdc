@@ -1,12 +1,15 @@
 package com.flink.demo;
 
+import com.flink.demo.alarm.AlarmEntity;
+import com.flink.demo.alarm.AlarmUtil;
+import com.flink.demo.kafka.ProducerSingleton;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 
-import java.util.Properties;
+import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -14,38 +17,60 @@ import java.util.concurrent.ExecutionException;
  */
 @Slf4j
 public class KafkaProducer {
-
     /**
      * Sends a message to a Kafka topic.
      *
      * @param topic   the name of the Kafka topic
      * @param key     the key for the message
-     * @param message the message to be sent
+     * @param message the messag  to be sent
      */
 
-    public static void sendMessage(String clusterIp, String topic, String key, String message) throws ExecutionException, InterruptedException {
-        Properties props = new Properties();
-        props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, clusterIp);
-        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
-        props.put("sasl.mechanism", "SCRAM-SHA-256");
-        props.put("sasl.jaas.config", "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"admin\" password=\"admin-succ\";");
-        props.put("acks", "all");
-        Producer<String, String> producer = new org.apache.kafka.clients.producer.KafkaProducer<>(props);
-
+    public static void sendMessage(String clusterIp, String topic, String key, String message, String user, String pwd, int taskId, String databaseName, String tableName) throws ExecutionException, InterruptedException {
+        Producer<String, String> producer = ProducerSingleton.getProducer(clusterIp, user, pwd);
         // Send the message
-        RecordMetadata metadata = producer.send(new ProducerRecord<>(topic, key, message)).get();
-        log.info("消息已成功发送至主题：{} , 分区： {}", metadata.topic(), metadata.partition());
+        producer.send(new ProducerRecord<>(topic, key, message), (metadata, exception) -> {
+            if (exception != null) {
+                List<AlarmEntity> alarmconfig = getTroblealarm(taskId);
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                java.util.Date date = new java.util.Date();
+                String formattedDate = formatter.format(date);
+                if (alarmconfig.size() > 0) {
+                    alarmconfig.forEach(e -> {
+                        if ("1".equals(e.getAlertSms())) {
+                            AlarmUtil.sendForImm(e.getAlarmPerson(), formattedDate + ":" + "kafka推送消息失败flink任务Id：" + taskId + ", DataBase:" + databaseName + ", TableName:" + tableName + "send to Topic:" + topic + "异常信息" + exception.getMessage(), taskId);
+                        }
+                        if ("1".equals(e.getAlertImm())) {
+                            AlarmUtil.sendForMessage(e.getAlarmPhone(), formattedDate + ":" + "kafka推送消息失败flink任务Id：" + taskId + ", DataBase:" + databaseName + ", TableName:" + tableName + "send to Topic:" + topic + "异常信息" + exception.getMessage(), taskId);
+                        }
+                    });
+                }
+            }
+        });
     }
 
-    public static void main(String[] args) {
-        try {
-            KafkaProducer.sendMessage("172.30.145.213:9092", "Test-Topic", "1", "1213");
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+
+
+    private static List<AlarmEntity> getTroblealarm(int jobId) {
+        List<AlarmEntity> Alarms = new ArrayList<AlarmEntity>();
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://172.30.142.231:3306/system_service_control_test?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false", "manager", "Scal@YcaCn123")) {
+            String sql = "SELECT alarm_phone,alarm_person, ALERT_SMS , ALERT_IMM FROM job_alarm_config WHERE job_id = ? and type = 5";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, jobId);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        AlarmEntity alarmuser = new AlarmEntity();
+                        alarmuser.setAlarmPhone(rs.getString("alarm_phone"));
+                        alarmuser.setAlarmPerson(rs.getString("alarm_person"));
+                        alarmuser.setAlertImm(rs.getString("ALERT_IMM"));
+                        alarmuser.setAlertSms(rs.getString("ALERT_SMS"));
+                        Alarms.add(alarmuser);
+                    }
+                }
+            }
+            return Alarms;
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return Alarms;
     }
 }

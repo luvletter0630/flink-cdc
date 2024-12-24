@@ -5,10 +5,12 @@ package com.flink.demo;
  * @date 2024/3/25 16:16
  * @description:
  */
+import com.flink.demo.kafka.ProducerSingleton;
 import io.debezium.spi.converter.CustomConverter;
 import io.debezium.spi.converter.RelationalColumn;
 import lombok.extern.slf4j.Slf4j;
 import com.ververica.cdc.connectors.shaded.org.apache.kafka.connect.data.SchemaBuilder;
+import org.apache.kafka.clients.producer.Producer;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -35,7 +37,6 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public class MySqlDateTimeConverter implements CustomConverter<SchemaBuilder, RelationalColumn> {
-
     private DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_DATE;
     private DateTimeFormatter timeFormatter = DateTimeFormatter.ISO_TIME;
     private DateTimeFormatter datetimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
